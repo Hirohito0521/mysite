@@ -15,12 +15,14 @@ href="https://cdn.jsdelivr.net/gh/microsoft/cascadia-code@latest/releases/cascad
     --bg:#1a1d21;
     --text:#ffffff;
     --grid-opacity:0.05;
+    --button-bg:rgba(255,255,255,0.08);
 }
 
 body.light{
     --bg:#ececec;
-    --text:#121212;
-    --grid-opacity:0.07;
+    --text:#111111;
+    --grid-opacity:0.06;
+    --button-bg:rgba(0,0,0,0.06);
 }
 
 *{
@@ -30,7 +32,7 @@ body.light{
 }
 
 body{
-    height:100vh;
+    min-height:100svh;
     background:var(--bg);
     color:var(--text);
 
@@ -39,21 +41,24 @@ body{
     align-items:center;
 
     overflow:hidden;
+
     font-family:'Cascadia Code', monospace;
 
     transition:
-        background .5s ease,
-        color .5s ease;
+        background .45s ease,
+        color .45s ease;
 }
 
-/* ===== 背景グロー ===== */
+/* ===== グロー背景 ===== */
 
 .bg-glow{
     position:fixed;
     inset:0;
     z-index:-2;
-    filter:blur(130px);
-    opacity:0.18;
+
+    filter:blur(140px);
+    opacity:.16;
+
     transition:
         background 1s ease;
 }
@@ -79,11 +84,12 @@ body{
     background-size:40px 40px;
 }
 
-/* ===== テーマボタン ===== */
+/* ===== ボタン ===== */
 
 .theme-btn{
     position:fixed;
-    top:20px;
+
+    top:max(20px, env(safe-area-inset-top));
     right:20px;
 
     width:52px;
@@ -92,27 +98,31 @@ body{
     border:none;
     border-radius:18px;
 
-    background:rgba(255,255,255,0.08);
+    background:var(--button-bg);
+
     backdrop-filter:blur(20px);
 
     color:var(--text);
-    font-size:1.3rem;
+
+    font-size:1.2rem;
     cursor:pointer;
 
-    transition:.25s ease;
+    transition:
+        transform .2s ease,
+        background .25s ease;
 }
 
 .theme-btn:active{
     transform:scale(.95);
 }
 
-/* ===== メイン ===== */
+/* ===== レイアウト ===== */
 
 .wrapper{
     display:flex;
     align-items:center;
     gap:52px;
-    padding:20px;
+    padding:24px;
 }
 
 /* ===== 時計 ===== */
@@ -120,24 +130,28 @@ body{
 .time-container{
     display:flex;
     gap:4px;
+
     font-size:clamp(3rem, 7vw, 6rem);
     font-weight:600;
     letter-spacing:0.06em;
+
     user-select:none;
 }
 
 .char-wrapper{
     position:relative;
+
     width:.75em;
     height:1.2em;
+
     overflow:hidden;
 }
 
 .char{
     position:absolute;
-    width:100%;
     top:0;
     left:0;
+    width:100%;
 
     transform:translateY(-100%);
     opacity:0;
@@ -157,21 +171,21 @@ body{
     opacity:0;
 }
 
-/* ===== カード ===== */
+/* ===== RGBカード ===== */
 
 .color-card{
     width:240px;
-    padding:28px;
-    border-radius:30px;
 
-    backdrop-filter:blur(10px);
+    padding:28px;
+
+    border-radius:30px;
 
     box-shadow:
         0 15px 40px rgba(0,0,0,.15);
 
     transition:
         background-color .8s ease,
-        transform .25s ease,
+        transform .22s ease,
         color .25s ease;
 }
 
@@ -182,14 +196,56 @@ body{
 .rgb-line{
     font-size:1.45rem;
     font-weight:500;
-    opacity:.72;
+
     margin:8px 0;
+
+    opacity:.72;
 }
 
 .hex{
     margin-top:12px;
+
     font-size:.9rem;
     opacity:.55;
+}
+
+/* ===== スマホ対応 ===== */
+
+@media (max-width:768px){
+
+    .wrapper{
+        flex-direction:column;
+        gap:28px;
+        width:100%;
+        padding:28px;
+    }
+
+    .time-container{
+        font-size:clamp(2.8rem, 12vw, 4.4rem);
+        justify-content:center;
+    }
+
+    .color-card{
+        width:min(88vw, 340px);
+        border-radius:26px;
+        padding:24px;
+    }
+
+    .rgb-line{
+        font-size:1.25rem;
+    }
+
+    .theme-btn{
+        width:48px;
+        height:48px;
+        border-radius:16px;
+        font-size:1.1rem;
+        right:16px;
+    }
+
+    .grid{
+        background-size:32px 32px;
+    }
 }
 
 </style>
@@ -206,22 +262,35 @@ body{
 
 <div class="wrapper">
 
-    <div class="time-container"
-    id="timeContainer"></div>
+    <div
+    class="time-container"
+    id="timeContainer">
+    </div>
 
-    <div class="color-card"
+    <div
+    class="color-card"
     id="colorCard">
 
-        <div class="rgb-line"
-        id="rValue">R: 00</div>
+        <div
+        class="rgb-line"
+        id="rValue">
+        R: 00
+        </div>
 
-        <div class="rgb-line"
-        id="gValue">G: 00</div>
+        <div
+        class="rgb-line"
+        id="gValue">
+        G: 00
+        </div>
 
-        <div class="rgb-line"
-        id="bValue">B: 00</div>
+        <div
+        class="rgb-line"
+        id="bValue">
+        B: 00
+        </div>
 
-        <div class="hex"
+        <div
+        class="hex"
         id="hexValue">
         #000000
         </div>
@@ -232,8 +301,13 @@ body{
 
 <script>
 
-const body = document.body;
-const btn = document.getElementById("themeBtn");
+/* ===== テーマ ===== */
+
+const body =
+document.body;
+
+const btn =
+document.getElementById("themeBtn");
 
 if(localStorage.getItem("theme")==="light"){
     body.classList.add("light");
@@ -251,10 +325,12 @@ btn.onclick = ()=>{
     );
 };
 
-/* ===== 時計生成 ===== */
+/* ===== 時計 ===== */
 
-const timeContainer =
-document.getElementById("timeContainer");
+const container =
+document.getElementById(
+"timeContainer"
+);
 
 let currentChars = [];
 
@@ -280,7 +356,7 @@ function setupClock(){
         char;
 
         wrapper.appendChild(span);
-        timeContainer.appendChild(wrapper);
+        container.appendChild(wrapper);
 
         currentChars.push(span);
     });
@@ -288,37 +364,53 @@ function setupClock(){
 
 function animateCard(card){
 
-    card.classList.add("animate");
+    card.classList.add(
+    "animate"
+    );
 
     setTimeout(()=>{
-        card.classList.remove("animate");
+        card.classList.remove(
+        "animate"
+        );
     },220);
 }
 
 function updateClock(){
 
-    const now = new Date();
+    const now =
+    new Date();
 
     const time =
     `${String(now.getHours()).padStart(2,'0')}:` +
     `${String(now.getMinutes()).padStart(2,'0')}:` +
     `${String(now.getSeconds()).padStart(2,'0')}`;
 
-    [...time].forEach((newChar,index)=>{
+    [...time].forEach(
+    (newChar,index)=>{
 
         const old =
         currentChars[index];
 
-        if(old.textContent!==newChar){
+        if(
+            old.textContent
+            !== newChar
+        ){
 
             const wrapper =
             old.parentElement;
 
-            old.classList.add("exit");
-            old.classList.remove("show");
+            old.classList.add(
+            "exit"
+            );
+
+            old.classList.remove(
+            "show"
+            );
 
             const next =
-            document.createElement("div");
+            document.createElement(
+            "div"
+            );
 
             next.className =
             "char";
@@ -326,10 +418,15 @@ function updateClock(){
             next.textContent =
             newChar;
 
-            wrapper.appendChild(next);
+            wrapper.appendChild(
+            next
+            );
 
-            requestAnimationFrame(()=>{
-                next.classList.add("show");
+            requestAnimationFrame(
+            ()=>{
+                next.classList.add(
+                "show"
+                );
             });
 
             setTimeout(()=>{
@@ -363,28 +460,39 @@ function updateClock(){
     `#${h}${m}${s}`;
 
     const card =
-    document.getElementById("colorCard");
+    document.getElementById(
+    "colorCard"
+    );
 
     card.style.background =
     color;
 
     animateCard(card);
 
-    document.getElementById("glow")
-    .style.background =
+    document.getElementById(
+    "glow"
+    ).style.background =
     `radial-gradient(circle, ${color}, transparent 60%)`;
 
-    document.getElementById("rValue")
-    .textContent=`R: ${h}`;
+    document.getElementById(
+    "rValue"
+    ).textContent =
+    `R: ${h}`;
 
-    document.getElementById("gValue")
-    .textContent=`G: ${m}`;
+    document.getElementById(
+    "gValue"
+    ).textContent =
+    `G: ${m}`;
 
-    document.getElementById("bValue")
-    .textContent=`B: ${s}`;
+    document.getElementById(
+    "bValue"
+    ).textContent =
+    `B: ${s}`;
 
-    document.getElementById("hexValue")
-    .textContent=color;
+    document.getElementById(
+    "hexValue"
+    ).textContent =
+    color;
 
     const brightness =
     (
@@ -402,7 +510,10 @@ function updateClock(){
 setupClock();
 updateClock();
 
-setInterval(updateClock,1000);
+setInterval(
+updateClock,
+1000
+);
 
 </script>
 
